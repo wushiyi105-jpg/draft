@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Draft · 内容运营</title>
+<style>
+  :root{--bg:#0d1117;--panel:#161b22;--line:#26303d;--ink:#e6edf3;--dim:#8b949e;--accent:#4f9cf9}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC",sans-serif}
+  .wrap{max-width:920px;margin:0 auto;padding:40px 20px 80px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:20px}
+  .cols{display:grid;grid-template-columns:1.3fr 1fr;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .card h2{font-size:14px;margin:0 0 8px;color:var(--accent)}
+  .row{display:flex;justify-content:space-between;font-size:14px;padding:3px 0}
+  .finding{color:#f0883e;font-size:13px}
+  .tag{color:var(--dim);font-size:12px}
+  a{color:var(--accent);text-decoration:none;margin-right:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Draft</h1>
+  <div class="sub">{{ today }} · 未来 7 天缺口 {{ p.gaps|length }} 天 · 扣分 {{ p.penalty_total }}</div>
+
+  <div class="cols">
+    <div>
+      <div class="card"><h2>排期</h2>
+        {% for s in slots %}<div class="row"><span>{{ s.day }}</span><span>{{ s.pillar }} · {{ s.title }}</span></div>{% endfor %}
+        {% if not slots %}<div class="tag">还没有排期</div>{% endif %}
+      </div>
+      <div class="card"><h2>可复用（30 天外按表现）</h2>
+        {% for title, day in p.reuse %}<div class="row"><span>{{ title }}</span><span class="tag">{{ day }}</span></div>{% endfor %}
+      </div>
+    </div>
+    <div>
+      <div class="card"><h2>支柱占比</h2>
+        {% for name, share in p.shares.items() %}<div class="row"><span>{{ name }}</span><span>{{ '%.0f' % (share * 100) }}%</span></div>{% endfor %}
+      </div>
+      <div class="card"><h2>选题库</h2>
+        {% for i in ideas %}<div class="row"><span>{{ i.title }}</span><span class="tag">{{ i.pillar }}{% if i.used %} · 已用{% endif %}</span></div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% for f in p.findings %}
+  <div class="finding">{{ f.rule_id }} -{{ f.penalty }} · {{ f.message }}</div>
+  {% endfor %}
+
+  <p><a href="/ideas.txt">生成选题</a><a href="/health">健康检查</a></p>
+</div>
+</body>
+</html>
