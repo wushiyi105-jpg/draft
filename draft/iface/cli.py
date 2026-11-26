@@ -51,7 +51,7 @@ def seed(db: Path = typer.Option(None)) -> None:
     console.print(f"已写入 {len(data['pillars'])} 个支柱、{len(data['posts'])} 条内容、{len(data['ideas'])} 个选题")
 
 
-@app.command()
+@app.command("plan")
 def plan_cmd(month: str = typer.Option("", help="2026-11"), db: Path = typer.Option(None)) -> None:
     """看占比、缺口与复用候选。"""
     s = _settings(db)
@@ -70,17 +70,15 @@ def plan_cmd(month: str = typer.Option("", help="2026-11"), db: Path = typer.Opt
         console.print(f"  [yellow]{f.rule_id}[/] -{f.penalty} {f.message}")
 
 
-app.command(name="plan")(plan_cmd)
 
 
-@app.command()
+@app.command("stats")
 def stats_cmd(db: Path = typer.Option(None)) -> None:
     """按支柱看播放量。"""
     store = _store(_settings(db))
     console.print(stats(store.list_posts(), store.list_pillars()))
 
 
-app.command(name="stats")(stats_cmd)
 
 
 @app.command()
@@ -99,7 +97,7 @@ def ideas(month: str = typer.Option(""), db: Path = typer.Option(None)) -> None:
             console.print(f"- [{i.pillar}] {i.title}{'（已用）' if i.used else ''}")
 
 
-@app.command()
+@app.command("schedule")
 def schedule_cmd(day: str = typer.Option(""), db: Path = typer.Option(None)) -> None:
     """把库存选题填进未来 7 天缺口。"""
     s = _settings(db)
@@ -109,7 +107,6 @@ def schedule_cmd(day: str = typer.Option(""), db: Path = typer.Option(None)) -> 
     console.print(f"排入 {schedule(store, p, 7, d)} 条")
 
 
-app.command(name="schedule")(schedule_cmd)
 
 
 @app.command()
