@@ -4,32 +4,35 @@ from __future__ import annotations
 
 import json
 from datetime import date, timedelta
+from pathlib import Path
 
-from ..adapters.llm import build_llm
-from ..adapters.store import SqliteStore
 from ..config import Settings
 from ..domain.engine import build, stats
 from ..domain.guard import check
 from ..domain.models import Finding, Plan
+from ..ports import LLMPort, StorePort
 
-PROMPT = """基于账号支柱与近期表现，给 5 个选题，输出 JSON：
-{"ideas": [{"title": "选题", "pillar": "支柱名", "rationale": "为什么"}]}
-只能引用输入的支柱名与已发内容，不许承诺效果（不许写爆了、涨粉、必火）。"""
+PROMPT = (Path(__file__).resolve().parents[2] / "prompts" / "ideas.md").read_text(encoding="utf-8")
 
 
-def plan(store: SqliteStore, month: str, today: date | None = None) -> Plan:
+def plan(store: StorePort, month: str, today: date | None = None) -> Plan:
     return build(
         month, store.list_posts(), store.list_pillars(), store.list_slots(), today or date.today()
     )
 
 
-def generate(store: SqliteStore, settings: Settings, month: str, today: date | None = None) -> tuple[Plan, list[dict], list[Finding]]:
+def generate(
+    store: StorePort,
+    settings: Settings,
+    month: str,
+    today: date | None = None,
+    llm: LLMPort | None = None,
+) -> tuple[Plan, list[dict], list[Finding]]:
     p = plan(store, month, today)
-    if not settings.llm_enabled:
+    if llm is None:
         return p, [], []
     pillars = [x.name for x in store.list_pillars()]
     top = [x.title for x in sorted(store.list_posts(), key=lambda x: x.views, reverse=True)[:5]]
-    llm = build_llm(settings.llm_base_url, settings.llm_api_key, settings.llm_model, PROMPT)
     try:
         data = json.loads(llm.write(PROMPT, f"pillars={pillars}\ntop={top}\nstats={stats(store.list_posts(), store.list_pillars())}"))
     except Exception:  # noqa: BLE001
@@ -41,7 +44,7 @@ def generate(store: SqliteStore, settings: Settings, month: str, today: date | N
     return p, [i for i in ideas if i.get("pillar") in pillars], findings
 
 
-def schedule(store: SqliteStore, p: Plan, days: int = 7, today: date | None = None) -> int:
+def schedule(store: StorePort, p: Plan, days: int = 7, today: date | None = None) -> int:
     today = today or date.today()
     ideas = [i for i in store.list_ideas() if not i.used]
     n = 0

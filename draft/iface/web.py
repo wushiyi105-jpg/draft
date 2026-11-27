@@ -9,8 +9,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 
+from ..adapters.llm import build_llm
 from ..adapters.store import SqliteStore
-from ..app.run import generate, plan, stats
+from ..app.run import PROMPT, generate, plan, stats
 from ..config import Settings
 
 TEMPLATES = Jinja2Templates(directory=str(Path(__file__).resolve().parents[2] / "templates"))
@@ -19,6 +20,7 @@ TEMPLATES = Jinja2Templates(directory=str(Path(__file__).resolve().parents[2] / 
 def create_app(settings: Settings, store: SqliteStore | None = None) -> FastAPI:
     app = FastAPI(title="Draft", version="1.0.0")
     store = store or SqliteStore(settings.db_path)
+    llm = build_llm(settings.llm_base_url, settings.llm_api_key, settings.llm_model, PROMPT) if settings.llm_enabled else None
 
     def render(request: Request) -> HTMLResponse:
         today = date.today()
@@ -36,7 +38,7 @@ def create_app(settings: Settings, store: SqliteStore | None = None) -> FastAPI:
 
     @app.get("/ideas.txt", response_class=PlainTextResponse)
     def ideas_text() -> PlainTextResponse:
-        _, rows, findings = generate(store, settings, date.today().strftime("%Y-%m"))
+        _, rows, findings = generate(store, settings, date.today().strftime("%Y-%m"), llm=llm)
         text = "\n".join(f"- [{r.get('pillar')}] {r.get('title')}（未验证）" for r in rows)
         if findings:
             text += "\n" + "\n".join(f.rule_id + " " + f.message for f in findings)

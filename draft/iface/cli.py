@@ -9,8 +9,9 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
+from ..adapters.llm import build_llm
 from ..adapters.store import SqliteStore
-from ..app.run import generate, plan, schedule, stats
+from ..app.run import PROMPT, generate, plan, schedule, stats
 from ..config import Settings
 from ..config import settings as default_settings
 from ..doctor import main as doctor_main
@@ -87,7 +88,8 @@ def ideas(month: str = typer.Option(""), db: Path = typer.Option(None)) -> None:
     s = _settings(db)
     store = _store(s)
     m = month or date.today().strftime("%Y-%m")
-    p, rows, findings = generate(store, s, m)
+    llm = build_llm(s.llm_base_url, s.llm_api_key, s.llm_model, PROMPT) if s.llm_enabled else None
+    p, rows, findings = generate(store, s, m, llm=llm)
     for r in rows:
         console.print(f"- [{r.get('pillar')}] {r.get('title')}（未验证）")
     for f in findings:
