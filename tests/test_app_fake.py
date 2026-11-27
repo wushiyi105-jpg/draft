@@ -1,17 +1,32 @@
-"""主用例只依赖 ports：用 MagicMock 内存假实现，不建 SQLite 文件。"""
+"""真实内存 Store 跑 plan：不建 SQLite，mypy 校验 StorePort。"""
 
 from __future__ import annotations
 
 from datetime import date
-from unittest.mock import MagicMock
 
 from draft.app.run import plan
+from draft.domain.models import Idea, Pillar, Post, Slot
 from draft.ports import StorePort
 
 
-def test_main_path_with_memory_store(tmp_path) -> None:
-    store = MagicMock(spec=StorePort)
-    
+class InMemoryStore:
+    def list_posts(self) -> list[Post]:
+        return []
+
+    def list_pillars(self) -> list[Pillar]:
+        return []
+
+    def list_slots(self) -> list[Slot]:
+        return []
+
+    def list_ideas(self) -> list[Idea]:
+        return []
+
+    def add_slot(self, day: date, pillar: str, title: str) -> int:
+        return 1
+
+
+def test_plan_with_memory_store() -> None:
+    store: StorePort = InMemoryStore()
     out = plan(store, "2026-01", date(2026, 1, 5))
-    assert out is not None
-    assert not (tmp_path / "app.db").exists()
+    assert out.month == "2026-01"
