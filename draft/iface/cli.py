@@ -10,6 +10,7 @@ import typer
 from rich.console import Console
 
 from ..adapters.llm import build_llm
+from ..adapters.notify import WebhookNotifier
 from ..adapters.store import SqliteStore
 from ..app.run import PROMPT, generate, plan, schedule, stats
 from ..config import Settings
@@ -31,6 +32,13 @@ def _settings(db: Path | None, port: int | None = None) -> Settings:
 
 def _store(settings: Settings) -> SqliteStore:
     return SqliteStore(settings.db_path)
+
+
+def _notify(settings: Settings, text: str) -> None:
+    if not text or not settings.webhook_url:
+        return
+    ok = WebhookNotifier(settings.webhook_url).send(text)
+    console.print(f"[dim]webhook {'ok' if ok else 'failed'}[/]")
 
 
 @app.command()
@@ -86,13 +94,21 @@ def ideas(month: str = typer.Option(""), db: Path = typer.Option(None)) -> None:
     m = month or date.today().strftime("%Y-%m")
     llm = build_llm(s.llm_base_url, s.llm_api_key, s.llm_model, PROMPT) if s.llm_enabled else None
     p, rows, findings = generate(store, s, m, llm=llm)
+    body: list[str] = []
     for r in rows:
-        console.print(f"- [{r.get('pillar')}] {r.get('title')}（未验证）")
+        line = f"- [{r.get('pillar')}] {r.get('title')}（未验证）"
+        console.print(line)
+        body.append(line)
     for f in findings:
-        console.print(f"  [yellow]{f.rule_id}[/] -{f.penalty} {f.message}")
+        line = f"  {f.rule_id} -{f.penalty} {f.message}"
+        console.print(line)
+        body.append(line)
     if not rows:
         for i in store.list_ideas():
-            console.print(f"- [{i.pillar}] {i.title}{'（已用）' if i.used else ''}")
+            line = f"- [{i.pillar}] {i.title}{'（已用）' if i.used else ''}"
+            console.print(line)
+            body.append(line)
+    _notify(s, "\n".join(body))
 
 
 @app.command("schedule")

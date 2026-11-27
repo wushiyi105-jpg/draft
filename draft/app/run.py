@@ -15,6 +15,16 @@ from ..ports import LLMPort, StorePort
 PROMPT = (Path(__file__).resolve().parents[2] / "prompts" / "ideas.md").read_text(encoding="utf-8")
 
 
+def parse_json(text: str) -> dict:
+    """模型常把 JSON 包在 ```json 里；取出第一个完整对象再解析。"""
+    text = text.strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start < 0 or end <= start:
+        raise ValueError("no json object")
+    return json.loads(text[start : end + 1])
+
+
 def plan(store: StorePort, month: str, today: date | None = None) -> Plan:
     return build(
         month, store.list_posts(), store.list_pillars(), store.list_slots(), today or date.today()
@@ -34,7 +44,7 @@ def generate(
     pillars = [x.name for x in store.list_pillars()]
     top = [x.title for x in sorted(store.list_posts(), key=lambda x: x.views, reverse=True)[:5]]
     try:
-        data = json.loads(llm.write(PROMPT, f"pillars={pillars}\ntop={top}\nstats={stats(store.list_posts(), store.list_pillars())}"))
+        data = parse_json(llm.write(PROMPT, f"pillars={pillars}\ntop={top}\nstats={stats(store.list_posts(), store.list_pillars())}"))
     except Exception:  # noqa: BLE001
         return p, [], []
     ideas, findings = check(list(data.get("ideas", [])))
