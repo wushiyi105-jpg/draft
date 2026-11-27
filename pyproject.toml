@@ -9,7 +9,7 @@ description = "内容运营：今天发什么、旧内容怎么再发一次"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "shiyi", email = "wushiyi105@gmail.com" }]
+authors = [{ name = "罗之之", email = "wushiyi105@gmail.com" }]
 dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",
