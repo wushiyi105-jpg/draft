@@ -52,6 +52,9 @@ No, it only schedules.
 **Can I change the 30-day reuse window?**
 Yes, it is a constant in `domain/rules/reuse.py`.
 
+**Was the Docker image verified?**
+Docker is not installed on the build machine, so `docker build .` was not run and the image is unverified; only the Dockerfile and ports were checked statically.
+
 ## Commands
 
 See the Chinese README (`README.md`) for the command table with flags; every command supports `--help`.
@@ -64,13 +67,13 @@ FastAPI + Uvicorn, Jinja2, pydantic / pydantic-settings, httpx, Typer + Rich, SQ
 
 ```mermaid
 graph LR
-  A[历史内容] --> M[支柱占比]
-  B[支柱目标] --> M
-  C[排期] --> M[日历缺口 / 复用冲突]
-  M --> R[规则：占比 / 复用 / 缺口]
-  R --> P[模型在缺口里出选题]
-  P --> G[声称守卫]
-  G --> O[排期表]
+  A[past content] --> M[pillar share]
+  B[pillar targets] --> M
+  C[schedule] --> M[calendar gaps / reuse conflicts]
+  M --> R[rules: share / reuse / gaps]
+  R --> P[model proposes ideas for gaps]
+  P --> G[claim guard]
+  G --> O[schedule]
 ```
 
 ## Layout

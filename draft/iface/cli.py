@@ -71,15 +71,11 @@ def plan_cmd(month: str = typer.Option("", help="2026-11"), db: Path = typer.Opt
         console.print(f"  [yellow]{f.rule_id}[/] -{f.penalty} {f.message}")
 
 
-
-
 @app.command("stats")
 def stats_cmd(db: Path = typer.Option(None)) -> None:
     """按支柱看播放量。"""
     store = _store(_settings(db))
     console.print(stats(store.list_posts(), store.list_pillars()))
-
-
 
 
 @app.command()
@@ -107,8 +103,6 @@ def schedule_cmd(day: str = typer.Option(""), db: Path = typer.Option(None)) -> 
     store = _store(s)
     p = plan(store, d.strftime("%Y-%m"), d)
     console.print(f"排入 {schedule(store, p, 7, d)} 条")
-
-
 
 
 @app.command()
