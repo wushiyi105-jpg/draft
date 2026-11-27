@@ -79,7 +79,7 @@ python -m draft serve        # http://127.0.0.1:8013
 能，规则在 `domain/rules/reuse.py`，窗口是常量。
 
 **Docker 镜像验证了吗？**
-本机没有 Docker，`docker build .` 未执行，镜像未构建验证；Dockerfile 与端口只做了静态核对。
+CI 的 `docker` job 每次执行 `docker build .`，启动容器并轮询 `/health`；本机没有 Docker，本地未重复跑。
 
 ## 命令参考
 
