@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 种子选题扩到 25 个；新增 20 个开头结构、3 类账号支柱、小红书 / 抖音 / 视频号平台规则
+- 新增 `weekly` 命令：7 天排期 + 每条开头三句 + 平台规则，一条命令成文
+- 30 天内发过的标题自动排除，排期标题过期会被库存选题替换
 - `0001_init` 改为显式 `op.create_table` / `op.create_index`，运行期走 `alembic upgrade`
 - `app/` 只依赖 `ports`，新增内存假实现用例
 - 开 ruff `E2`/`E3`；CI 增加 `docker build` 与 `/health` 探活

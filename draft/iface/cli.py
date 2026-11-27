@@ -13,6 +13,7 @@ from ..adapters.llm import build_llm
 from ..adapters.notify import WebhookNotifier
 from ..adapters.store import SqliteStore
 from ..app.run import PROMPT, generate, plan, schedule, stats
+from ..app.weekly import build_week
 from ..config import Settings
 from ..config import settings as default_settings
 from ..doctor import main as doctor_main
@@ -77,6 +78,34 @@ def plan_cmd(month: str = typer.Option("", help="2026-11"), db: Path = typer.Opt
         console.print(f"可复用：{title}（{day}）")
     for f in p.findings:
         console.print(f"  [yellow]{f.rule_id}[/] -{f.penalty} {f.message}")
+
+
+@app.command()
+def weekly(
+    start: str = typer.Option("", help="起始日期 YYYY-MM-DD，默认今天"),
+    platform: str = typer.Option("xhs", help="xhs / dy / sph"),
+    days: int = typer.Option(7, help="排几天"),
+    out: Path = typer.Option(None, help="输出 Markdown；不填打印到终端"),
+    db: Path = typer.Option(None),
+) -> None:
+    """一周选题表 + 每条开头三句，一次成文。"""
+    s = _settings(db)
+    try:
+        d = date.fromisoformat(start) if start else date.today()
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    try:
+        body = build_week(_store(s), d, platform, days)
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=2) from exc
+    if out:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(body, encoding="utf-8")
+        console.print(f"[green]已写出[/] {out}（{len(body.splitlines())} 行）")
+    else:
+        console.print(body)
 
 
 @app.command("stats")
