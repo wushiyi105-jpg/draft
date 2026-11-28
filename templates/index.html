@@ -1,6 +1,6 @@
 {% from "_macros.html" import shell, head, stats, card, tag, empty, note %}
-{% call shell("Draft", "内容运营", true) %}
-{{ head("内容排期", today ~ " · 未来 7 天缺口 " ~ p.gaps|length ~ " 天") }}
+{% call shell("Draft", "下周编辑部", true) %}
+{{ head("下周发什么", today ~ " · 未来 7 天还缺 " ~ p.gaps|length ~ " 天") }}
 
 {{ stats([
   ("未来 7 天缺口", p.gaps|length, "天"),
